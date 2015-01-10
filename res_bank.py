@@ -17,10 +17,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from openerp.osv import orm
+from openerp.osv import osv
 
 
-class ResBank(orm.Model):
+class ResBank(osv.osv):
     _inherit = 'res.bank'
 
     def online_bank_info(self, cr, uid, bic, context=None):

@@ -44,6 +44,15 @@ def date2date(datestr, fromfmt='%d/%m/%y', tofmt='%Y-%m-%d'):
     '''
     return date2str(str2date(datestr, fromfmt), tofmt)
 
+def str2float(amount, debit=False):
+    if ',' in amount:
+        amount = amount.replace(',','')
+    if ' ' in amount:
+        amount = amount.replace(' ','')
+    if debit:
+        amount = '-' + amount
+    return float(amount)
+
 _SWIFT = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+ "
 
 def to_swift(astr, schemes=['utf-8', 'latin-1', 'ascii']):

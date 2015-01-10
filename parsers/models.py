@@ -102,7 +102,7 @@ class mem_bank_transaction(object):
         # remote_currency
 
         'transferred_amount',
-        # The actual amount transferred - 
+        # The actual amount transferred -
         #   negative means sent, positive means received
         # Most banks use the local_currency to express this amount, but there
         # may be exceptions I'm unaware of.
@@ -175,7 +175,7 @@ class mem_bank_transaction(object):
         # An error message for interaction with the user
         # Only used when mem_transaction.valid returns False.
         'error_message',
-        
+
         # Storno attribute. When True, make the cancelled debit eligible for
         # a next direct debit run
         'storno_retry',
@@ -213,7 +213,7 @@ class mem_bank_transaction(object):
     #                       Will be selected for matching.
     #   STORNO              A failed or reversed attempt at direct debit.
     #                       Either due to an action on the payer's side
-    #                       or a failure observed by the bank (lack of 
+    #                       or a failure observed by the bank (lack of
     #                       credit for instance)
     #
     #   Perhaps more will follow.
@@ -230,7 +230,7 @@ class mem_bank_transaction(object):
     DIRECT_DEBIT = 'DD'
     ORDER = 'DO'
     PAYMENT_BATCH = 'PB'
-    PAYMENT_TERMINAL = 'PT' 
+    PAYMENT_TERMINAL = 'PT'
     PERIODIC_ORDER = 'PO'
     STORNO = 'ST'
 
@@ -384,7 +384,7 @@ class parser(object):
     def parse(self, cr, data):
         '''
         Parse data.
-        
+
         data is a raw in memory file object. You have to split it in
         whatever chunks you see fit for parsing. It should return a list
         of mem_bank_statement objects. Every mem_bank_statement object
@@ -400,7 +400,7 @@ class parser(object):
         be used as a prefix. Adding a tracer (day resolution) can create
         uniqueness. Adding unique statement ids can add to the robustness of
         your transaction numbering.
-        
+
         Just mind that users can create random (file)containers with
         transactions in it. Try not to depend on order of appearance within
         these files. If in doubt: sort.

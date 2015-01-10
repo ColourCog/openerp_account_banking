@@ -21,7 +21,7 @@
 #
 ##############################################################################
 
-from openerp.osv import orm, fields
+from openerp.osv import fields, osv
 from openerp.tools.translate import _
 
 """
@@ -33,7 +33,7 @@ multiple matches or select a manual match.
 """
 
 
-class banking_transaction_wizard(orm.TransientModel):
+class banking_transaction_wizard(osv.TransientModel):
     _name = 'banking.transaction.wizard'
     _description = 'Match transaction'
 
@@ -138,7 +138,7 @@ class banking_transaction_wizard(orm.TransientModel):
                             break
                 # Cannot match the invoice 
                 if not found:
-                    orm.except_orm(
+                    raise osv.except_osv(
                         _("No entry found for the selected invoice"),
                         _("No entry found for the selected invoice. " +
                           "Try manual reconciliation."))
@@ -176,7 +176,7 @@ class banking_transaction_wizard(orm.TransientModel):
                                 found_move_line = True
                                 break
                     if not found_move_line:
-                        raise orm.except_orm(
+                        raise osv.except_osv(
                             _("Cannot select for reconcilion"),
                             _("No entry found for the selected invoice. "))
                 for move_line_id in manual_move_line_ids:

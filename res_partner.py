@@ -20,10 +20,10 @@
 #
 ##############################################################################
 
-from openerp.osv import orm
+from openerp.osv import osv
 
 
-class ResPartner(orm.Model):
+class ResPartner(osv.osv):
     _inherit = 'res.partner'
 
     def def_journal_account_bank(

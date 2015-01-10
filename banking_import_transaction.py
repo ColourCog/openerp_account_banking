@@ -24,7 +24,7 @@
 ##############################################################################
 
 import datetime
-from openerp.osv import orm, fields
+from openerp.osv import fields, osv
 from openerp import netsvc
 from openerp.tools.translate import _
 from openerp.addons.decimal_precision import decimal_precision as dp
@@ -36,7 +36,7 @@ from openerp.addons.account_banking.wizard import banktools
 bt = models.mem_bank_transaction
 
 
-class banking_import_transaction(orm.Model):
+class banking_import_transaction(osv.osv):
     """ orm representation of mem_bank_transaction() for interactive and posthoc
     configuration of reconciliation in the bank statement view.
 
@@ -385,7 +385,7 @@ class banking_import_transaction(orm.Model):
         transaction = self.browse(cr, uid, transaction_id, context)
         if not transaction.move_line_id:
             if transaction.match_type == 'invoice':
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _("Cannot link transaction %s with invoice") %
                     transaction.statement_line_id.name,
                     (transaction.invoice_ids and
@@ -395,7 +395,7 @@ class banking_import_transaction(orm.Model):
                             transaction.statement_line_id.name
                      )))
             else:
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _("Cannot link transaction %s with accounting entry") %
                     transaction.statement_line_id.name,
                     (transaction.move_line_ids and
@@ -627,7 +627,7 @@ class banking_import_transaction(orm.Model):
             if not transaction.match_type:
                 continue
             if transaction.match_type not in self.cancel_map:
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _("Cannot cancel type %s" % transaction.match_type),
                     _("No method found to cancel this type"))
             self.cancel_map[transaction.match_type](
@@ -648,7 +648,7 @@ class banking_import_transaction(orm.Model):
             if not transaction.match_type:
                 continue
             if transaction.match_type not in self.confirm_map:
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _("Cannot reconcile"),
                     _("Cannot reconcile type %s. No method found to " +
                       "reconcile this type") %
@@ -656,7 +656,7 @@ class banking_import_transaction(orm.Model):
                     )
             if (transaction.residual and transaction.writeoff_account_id):
                 if transaction.match_type not in ('invoice', 'move', 'manual'):
-                    raise orm.except_orm(
+                    raise osv.except_osv(
                         _("Cannot reconcile"),
                         _("Bank transaction %s: write off not implemented for " +
                           "this match type.") %
@@ -699,7 +699,7 @@ class banking_import_transaction(orm.Model):
                     me['transferred_amount'] - trans.transferred_amount):
                     dupes.append(trans.id)
             if len(dupes) < 1:
-                raise orm.except_orm(_('Cannot check for duplicate'),
+                raise osv.except_osv(_('Cannot check for duplicate'),
                                _("Cannot check for duplicate. "
                                  "I can't find myself."))
             if len(dupes) > 1:
@@ -953,7 +953,7 @@ class banking_import_transaction(orm.Model):
 
             if transaction.statement_line_id:
                 if transaction.statement_line_id.state == 'confirmed':
-                    raise orm.except_orm(
+                    raise osv.except_osv(
                         _("Cannot perform match"),
                         _("Cannot perform match on a confirmed transction"))
             else:
@@ -1393,7 +1393,7 @@ class banking_import_transaction(orm.Model):
 banking_import_transaction()
 
 
-class account_bank_statement_line(orm.Model):
+class account_bank_statement_line(osv.osv):
     _inherit = 'account.bank.statement.line'
 
     def _get_link_partner_ok(
@@ -1494,7 +1494,7 @@ class account_bank_statement_line(orm.Model):
 
         if (not statement_line.import_transaction_id or
             not statement_line.import_transaction_id.remote_account):
-            raise orm.except_orm(
+            raise osv.except_osv(
                 _("Error"),
                 _("No bank account available to link partner to"))
             
@@ -1559,14 +1559,14 @@ class account_bank_statement_line(orm.Model):
             if st_line.state != 'draft':
                 continue
             if st_line.duplicate:
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _('Bank transfer flagged as duplicate'),
                     _("You cannot confirm a bank transfer marked as a "
                       "duplicate (%s.%s)") % 
                     (st_line.statement_id.name, st_line.name,))
             if st_line.analytic_account_id:
                 if not st_line.statement_id.journal_id.analytic_journal_id:
-                    raise orm.except_orm(
+                    raise osv.except_osv(
                         _('No Analytic Journal !'),
                         _("You have to define an analytic journal on the '%s' "
                           "journal!") % (st_line.statement_id.journal_id.name,))
@@ -1617,7 +1617,7 @@ class account_bank_statement_line(orm.Model):
             if st_line.state != 'confirmed':
                 continue
             if st_line.statement_id.state != 'draft':
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _("Cannot cancel bank transaction"),
                     _("The bank statement that this transaction belongs to has "
                       "already been confirmed"))
@@ -1654,7 +1654,7 @@ class account_bank_statement_line(orm.Model):
             ids = [ids]
         for line in self.browse(cr, uid, ids, context=context):
             if line.state == 'confirmed':
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _('Confirmed Statement Line'),
                     _("You cannot delete a confirmed Statement Line"
                       ": '%s'") % line.name)
@@ -1748,7 +1748,7 @@ class account_bank_statement_line(orm.Model):
         return child_statement_ids
 
 
-class account_bank_statement(orm.Model):
+class account_bank_statement(osv.osv):
     _inherit = 'account.bank.statement'
 
     def _end_balance(self, cr, uid, ids, name, attr, context=None):
@@ -1784,13 +1784,13 @@ class account_bank_statement(orm.Model):
             self.balance_check(cr, uid, st.id, journal_type=j_type, context=context)
             if (not st.journal_id.default_credit_account_id) \
                     or (not st.journal_id.default_debit_account_id):
-                raise orm.except_orm(_('Configuration Error !'),
+                raise osv.except_osv(_('Configuration Error !'),
                         _('Please verify that an account is defined in the journal.'))
 
             # protect against misguided manual changes
             for line in st.move_line_ids:
                 if line.state != 'valid':
-                    raise orm.except_orm(_('Error !'),
+                    raise osv.except_osv(_('Error !'),
                             _('The account entries lines are not in valid state.'))
 
             line_obj.confirm(cr, uid, [line.id for line in st.line_ids], context)
@@ -1817,7 +1817,7 @@ class account_bank_statement(orm.Model):
         for st in self.browse(cr, uid, ids, context=context):
             for line in st.line_ids:
                 if line.state == 'confirmed':
-                    raise orm.except_orm(
+                    raise osv.except_osv(
                         _('Confirmed Statement Lines'),
                         _("You cannot delete a Statement with confirmed "
                           "Statement Lines: '%s'") % st.name)

@@ -19,12 +19,12 @@
 #
 ##############################################################################
 
-from openerp.osv import orm, fields
+from openerp.osv import fields, osv
 from openerp.tools.translate import _
 from openerp.addons.account_banking.wizard import banktools
 import ast
 
-class link_partner(orm.TransientModel):
+class link_partner(osv.TransientModel):
     _name = 'banking.link_partner'
     _description = 'Link partner'
 
@@ -83,13 +83,13 @@ class link_partner(orm.TransientModel):
             transaction = statement_line.import_transaction_id
 
             if statement_line.partner_bank_id:
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _('Error'),
                     _('Statement line is already linked to a bank account '))
             
             if not(transaction
                    and transaction.remote_account):
-                raise orm.except_orm(
+                raise osv.except_osv(
                     _('Error'),
                     _('No transaction data on statement line'))
 
@@ -112,15 +112,15 @@ class link_partner(orm.TransientModel):
                 vals['zip'] = transaction.remote_owner_postalcode
             if transaction.remote_owner_city and not vals.get('city'):
                 vals['city'] = transaction.remote_owner_city
-            if not vals.get('country_id'):
-                vals['country_id'] = banktools.get_country_id(
-                    self.pool, cr, uid, transaction, context=context)
+            #~ if not vals.get('country_id'):
+                #~ vals['country_id'] = banktools.get_country_id(
+                    #~ self.pool, cr, uid, transaction, context=context)
+            #~ if not vals.get('name'):
+                #~ vals['name'] = transaction.remote_owner
             if not vals.get('name'):
-                vals['name'] = transaction.remote_owner
-                if not vals['name']:
-                    vals['name'] = '/'
-            if not vals.get('remote_account'):
-                vals['remote_account'] = transaction.remote_account
+                vals['name'] = '/'
+            #~ if not vals.get('remote_account'):
+                #~ vals['remote_account'] = transaction.remote_account
 
         return super(link_partner, self).create(
             cr, uid, vals, context=context)

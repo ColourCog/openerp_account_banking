@@ -30,7 +30,7 @@ use parser.models as a mean of communication with the business logic.
 '''
 import base64
 import datetime
-from openerp.osv import orm, fields
+from openerp.osv import fields, osv
 from openerp.tools.translate import _
 from openerp.addons.account_banking.parsers import models
 from openerp.addons.account_banking.parsers import convert
@@ -51,7 +51,7 @@ def parser_types(*args, **kwargs):
     return models.parser_type.get_parser_types()
 
 
-class banking_import_line(orm.TransientModel):
+class banking_import_line(osv.TransientModel):
     _name = 'banking.import.line'
     _description = 'Bank import lines'
     _columns = {
@@ -94,7 +94,7 @@ class banking_import_line(orm.TransientModel):
         }
     
 
-class banking_import(orm.TransientModel):
+class banking_import(osv.TransientModel):
     _name = 'account.banking.bank.import'
 
     def import_statements_file(self, cr, uid, ids, context):
@@ -117,7 +117,7 @@ class banking_import(orm.TransientModel):
         parser_code = banking_import.parser
         parser = models.create_parser(parser_code)
         if not parser:
-            raise orm.except_orm(
+            raise osv.except_osv(
                 _('ERROR!'),
                 _('Unable to import parser %(parser)s. Parser class not found.') %
                 {'parser': parser_code}
@@ -131,7 +131,7 @@ class banking_import(orm.TransientModel):
         statements = parser.parse(cr, data)
 
         if any([x for x in statements if not x.is_valid()]):
-            raise orm.except_orm(
+            raise osv.except_osv(
                 _('ERROR!'),
                 _('The imported statements appear to be invalid! Check your file.')
             )

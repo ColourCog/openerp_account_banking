@@ -62,14 +62,14 @@ Modifications are extensive:
     Rejected payments from the bank receive on import the status 'rejected'.
 '''
 
-from openerp.osv import orm, fields
+from openerp.osv import fields, osv
 from openerp.osv.osv import except_osv
 from openerp.tools.translate import _
 from openerp import netsvc
 from openerp.addons.decimal_precision import decimal_precision as dp
 
 
-class account_banking_account_settings(orm.Model):
+class account_banking_account_settings(osv.osv):
     '''Default Journal for Bank Account'''
     _name = 'account.banking.account.settings'
     _description = __doc__
@@ -223,7 +223,7 @@ class account_banking_account_settings(orm.Model):
 account_banking_account_settings()
 
 
-class account_banking_imported_file(orm.Model):
+class account_banking_imported_file(osv.osv):
     '''Imported Bank Statements File'''
     _name = 'account.banking.imported.file'
     _description = __doc__
@@ -268,7 +268,7 @@ class account_banking_imported_file(orm.Model):
 account_banking_imported_file()
 
 
-class account_bank_statement(orm.Model):
+class account_bank_statement(osv.osv):
     '''
     Implement changes to this model for the following features:
 
@@ -456,7 +456,7 @@ class account_bank_statement(orm.Model):
             cr, uid, ids, context)
 
 
-class account_voucher(orm.Model):
+class account_voucher(osv.osv):
     _inherit = 'account.voucher'
 
     def _get_period(self, cr, uid, context=None):
@@ -469,7 +469,7 @@ class account_voucher(orm.Model):
         return super(account_voucher, self)._get_period(cr, uid, context)
 
 
-class account_bank_statement_line(orm.Model):
+class account_bank_statement_line(osv.osv):
     '''
     Extension on basic class:
         1. Extra links to account.period and res.partner.bank for tracing and
@@ -549,15 +549,21 @@ class account_bank_statement_line(orm.Model):
             _get_invoice_id, method=True, string='Linked Invoice',
             type='many2one', relation='account.invoice'
             ),
+        'state':fields.selection(
+            [('draft','Draft'),
+             ('confirmed','Confirmed')
+            ], 'Status', readonly=True, size=32, track_visibility='onchange'
+            ),
     }
 
     _defaults = {
         'period_id': _get_period_context,
         'currency': _get_currency,
+        'state': 'draft',
     }
 
 
-class invoice(orm.Model):
+class invoice(osv.osv):
     '''
     Create other reference types as well.
 
@@ -603,7 +609,7 @@ class invoice(orm.Model):
 invoice()
 
 
-class account_move_line(orm.Model):
+class account_move_line(osv.osv):
     _inherit = "account.move.line"
 
     def get_balance(self, cr, uid, ids, context=None):

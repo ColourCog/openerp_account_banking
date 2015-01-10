@@ -18,11 +18,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from openerp.osv import orm
+from openerp.osv import osv
 from openerp.addons.account_banking import sepa
 
 
-class ResPartnerBank(orm.Model):
+class ResPartnerBank(osv.osv):
     _inherit = 'res.partner.bank'
 
     def online_account_info(
@@ -33,69 +33,69 @@ class ResPartnerBank(orm.Model):
         """
         return False
 
-    def search(self, cr, uid, args, *rest, **kwargs):
-        """
-        When a complete IBAN is searched, also search for its BBAN
-        if we have the domestic column. Disregard spaces
-        when comparing IBANs.
-        """
-
-        def is_term(arg):
-            '''Flag an arg as term or otherwise'''
-            return isinstance(arg, (list, tuple)) and len(arg) == 3
-
-        def extended_filter_term(term):
-            '''
-            Extend the search criteria in term when appropriate.
-            '''
-            result = [term]
-            extra_terms = []
-            if term[0].lower() == 'acc_number' and term[1] in ('=', '=='):
-                iban = sepa.IBAN(term[2])
-                if iban.valid:
-                    # Disregard spaces when comparing IBANs
-                    cr.execute(
-                        """
-                        SELECT id FROM res_partner_bank
-                        WHERE replace(acc_number, ' ', '') = %s
-                        """, (term[2].replace(' ', ''),))
-                    ids = [row[0] for row in cr.fetchall()]
-                    result = [('id', 'in', ids)]
-
-                    if 'acc_number_domestic' in self._columns:
-                        bban = iban.localized_BBAN
-                        # Prevent empty search filters
-                        if bban:
-                            extra_terms.append(
-                                ('acc_number_domestic', term[1], bban))
-            for extra_term in extra_terms:
-                result = ['|'] + result + [extra_term]
-            return result
-
-        def extended_search_expression(args):
-            '''
-            Extend the search expression in args when appropriate.
-            The expression itself is in reverse polish notation, so recursion
-            is not needed.
-            '''
-            if not args:
-                return []
-
-            result = []
-            if is_term(args[0]) and len(args) > 1:
-                # Classic filter, implicit '&'
-                result += ['&']
-
-            for arg in args:
-                if is_term(arg):
-                    result += extended_filter_term(arg)
-                else:
-                    result += arg
-            return result
-
-        # Extend search filter
-        newargs = extended_search_expression(args)
-
-        # Original search
-        return super(ResPartnerBank, self).search(
-            cr, uid, newargs, *rest, **kwargs)
+    #~ def search(self, cr, uid, args, *rest, **kwargs):
+        #~ """
+        #~ When a complete IBAN is searched, also search for its BBAN
+        #~ if we have the domestic column. Disregard spaces
+        #~ when comparing IBANs.
+        #~ """
+#~ 
+        #~ def is_term(arg):
+            #~ '''Flag an arg as term or otherwise'''
+            #~ return isinstance(arg, (list, tuple)) and len(arg) == 3
+#~ 
+        #~ def extended_filter_term(term):
+            #~ '''
+            #~ Extend the search criteria in term when appropriate.
+            #~ '''
+            #~ result = [term]
+            #~ extra_terms = []
+            #~ if term[0].lower() == 'acc_number' and term[1] in ('=', '=='):
+                #~ iban = sepa.IBAN(term[2])
+                #~ if iban.valid:
+                    #~ # Disregard spaces when comparing IBANs
+                    #~ cr.execute(
+                        #~ """
+                        #~ SELECT id FROM res_partner_bank
+                        #~ WHERE replace(acc_number, ' ', '') = %s
+                        #~ """, (term[2].replace(' ', ''),))
+                    #~ ids = [row[0] for row in cr.fetchall()]
+                    #~ result = [('id', 'in', ids)]
+#~ 
+                    #~ if 'acc_number_domestic' in self._columns:
+                        #~ bban = iban.localized_BBAN
+                        #~ # Prevent empty search filters
+                        #~ if bban:
+                            #~ extra_terms.append(
+                                #~ ('acc_number_domestic', term[1], bban))
+            #~ for extra_term in extra_terms:
+                #~ result = ['|'] + result + [extra_term]
+            #~ return result
+#~ 
+        #~ def extended_search_expression(args):
+            #~ '''
+            #~ Extend the search expression in args when appropriate.
+            #~ The expression itself is in reverse polish notation, so recursion
+            #~ is not needed.
+            #~ '''
+            #~ if not args:
+                #~ return []
+#~ 
+            #~ result = []
+            #~ if is_term(args[0]) and len(args) > 1:
+                #~ # Classic filter, implicit '&'
+                #~ result += ['&']
+#~ 
+            #~ for arg in args:
+                #~ if is_term(arg):
+                    #~ result += extended_filter_term(arg)
+                #~ else:
+                    #~ result += arg
+            #~ return result
+#~ 
+        #~ # Extend search filter
+        #~ newargs = extended_search_expression(args)
+#~ 
+        #~ # Original search
+        #~ return super(ResPartnerBank, self).search(
+            #~ cr, uid, newargs, *rest, **kwargs)
