@@ -283,6 +283,13 @@ class account_bank_statement(osv.osv):
     '''
     _inherit = 'account.bank.statement'
 
+    def _get_default_period(self, cr, uid, context=None):
+        ctx = dict(context or {}, account_period_prefer_normal=True)
+        periods = self.pool.get('account.period').find(cr, uid, context=ctx)
+        if periods:
+            return periods[0]
+        return False
+
     _columns = {
         'period_id': fields.many2one('account.period', 'Period',
                                      required=False, readonly=True),
@@ -292,7 +299,8 @@ class account_bank_statement(osv.osv):
     }
 
     _defaults = {
-        'period_id': False,
+        # set to current period by default, probably using banktools
+        'period_id': _get_default_period,
     }
 
     def _check_company_id(self, cr, uid, ids, context=None):
@@ -312,6 +320,8 @@ class account_bank_statement(osv.osv):
                 if (line.period_id and
                         statement.company_id != line.period_id.company_id):
                     return False
+                # we need to get rid of this if so that default period is overwritten
+                # by line period
                 if not statement.period_id:
                     statement.write({'period_id': line.period_id.id})
                     statement.refresh()
