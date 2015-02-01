@@ -538,6 +538,7 @@ class account_bank_statement_line(osv.osv):
                             states={'draft': [('readonly', False)]}),
         'date': fields.date('Date', required=True, readonly=True,
                             states={'draft': [('readonly', False)]}),
+        'voucher_id': fields.many2one('account.voucher', 'Voucher'),
 
         # New columns
         'trans': fields.char('Bank Transaction ID', size=15, required=False,

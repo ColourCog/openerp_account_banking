@@ -146,7 +146,9 @@ class banking_transaction_wizard(osv.TransientModel):
         if manual_move_line_ids or manual_invoice_ids:
             move_line_obj = self.pool.get('account.move.line')
             invoice_obj = self.pool.get('account.invoice')
+            voucher_obj = self.pool.get('account.voucher')
             statement_line_obj = self.pool.get('account.bank.statement.line')
+            statement_obj = self.pool.get('account.bank.statement')
             # Rewrite *2many directive notation
             if manual_invoice_ids:
                 manual_invoice_ids = (
@@ -223,13 +225,33 @@ class banking_transaction_wizard(osv.TransientModel):
                         'account_id': move_line_obj.read(
                             cr, uid, todo_entry[1], 
                             ['account_id'], context=context)['account_id'][0],
+                        'state': 'confirmed',
                         }
 
                     if todo_entry[0]:
                         st_line_vals['partner_id'] = invoice_obj.browse(
                             cr, uid, todo_entry[0], context=context
                             ).partner_id.commercial_partner_id.id
-
+                    # forcing data in statement and move_line
+                    if todo_entry[1]:
+                        move_line_id = move_line_obj.browse(
+                                cr, uid, todo_entry[1], context=context)
+                        if not st_line_vals.get('partner_id'):
+                            st_line_vals['partner_id'] = move_line_id.partner_id.commercial_partner_id.id
+                        voucher_id = voucher_obj.search(cr, uid, 
+                            [('move_id', '=', move_line_id.move_id.id)])
+                        if voucher_id:
+                            st_line_vals['voucher_id'] = voucher_id[0]
+                            voucher = voucher_obj.browse(cr, uid,
+                                voucher_id[0], context=context)
+                            if voucher.name:
+                                st_line_vals['note'] = voucher.name
+                            
+                        statement_id = statement_line_obj.browse(
+                            cr, uid, statement_line_id, context=context
+                            ).statement_id.id
+                        move_line_obj.write(cr, uid, move_line_id.id, 
+                            {'statement_id': statement_id}, context=context)
                     statement_line_obj.write(
                         cr, uid, statement_line_id, 
                         st_line_vals, context=context)
@@ -393,14 +415,12 @@ class banking_transaction_wizard(osv.TransientModel):
         'manual_invoice_ids': fields.many2many(
             'account.invoice',
             'banking_transaction_wizard_account_invoice_rel',
-            'wizard_id', 'invoice_id', string='Match one or more invoices',
-            domain=[('reconciled', '=', False)]),
+            'wizard_id', 'invoice_id', string='Match one or more invoices'),
         'manual_move_line_ids': fields.many2many(
             'account.move.line',
             'banking_transaction_wizard_account_move_line_rel',
-            'wizard_id', 'move_line_id', string='Or match one or more entries',
-            domain=[('account_id.reconcile', '=', True),
-                    ('reconcile_id', '=', False)]),
+            'wizard_id', 'move_line_id', string='Match one or more entries',
+            domain=[('account_id.reconcile', '=', True)]),
         'payment_option': fields.related('import_transaction_id','payment_option', string='Payment Difference', type='selection', required=True,
                                          selection=[('without_writeoff', 'Keep Open'),('with_writeoff', 'Reconcile Payment Balance')]),
         'writeoff_analytic_id': fields.related(

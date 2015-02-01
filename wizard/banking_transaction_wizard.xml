@@ -88,10 +88,12 @@
                             </page>
                             <!-- Manual selection -->
                             <page string="Manual match">
+<!--
                                 <separator string="Match one or more invoices" colspan="4"/>
                                 <field name="manual_invoice_ids" colspan="4"
                                        context="{'search_default_partner_id': partner_id}"
                                        />
+-->
                                 <separator string="Or match one or more entries" colspan="4"/>
                                 <field name="manual_move_line_ids" colspan="4"
                                        context="{'search_default_partner_id': partner_id}"

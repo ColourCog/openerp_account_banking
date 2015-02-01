@@ -406,6 +406,9 @@ class banking_import_transaction(osv.osv):
                      )))
 
         st_line = transaction.statement_line_id
+        # Don't create a voucher if we already have one
+        if st_line.voucher_id:
+            return True
         journal = st_line.statement_id.journal_id
         if st_line.amount < 0.0:
             voucher_type = 'payment'
@@ -583,8 +586,7 @@ class banking_import_transaction(osv.osv):
             cr, uid, transaction.statement_line_id.id,
             {'reconcile_id': False}, context=context)
 
-    def _cancel_voucher(
-        self, cr, uid, transaction_id, context=None):
+    def _cancel_voucher(self, cr, uid, transaction_id, context=None):
         voucher_pool = self.pool.get('account.voucher')
         transaction = self.browse(cr, uid, transaction_id, context=context)
         st_line = transaction.statement_line_id
@@ -613,10 +615,13 @@ class banking_import_transaction(osv.osv):
                 self._legacy_cancel_move(cr, uid, transaction, context=context)
 
         return True
-
+        
+    def _cancel_manual(self, cr, uid, transaction_id, context=None):
+        return True
+        
     cancel_map = {
         'invoice': _cancel_voucher,
-        'manual': _cancel_voucher,
+        'manual': _cancel_manual,
         'move': _cancel_voucher,
         }
 
@@ -1629,11 +1634,12 @@ class account_bank_statement_line(osv.osv):
                 import_transaction_obj.cancel(
                     cr, uid, [st_line.import_transaction_id.id], context=context)
             st_line.refresh()
-            for line in st_line.move_ids:
-                # We allow for people canceling and removing
-                # the associated payments, which can lead to confirmed
-                # statement lines without an associated move
-                move_unlink_ids.append(line.id)
+            if st_line.import_transaction_id.match_type != "manual":
+                for line in st_line.move_ids:
+                    # We allow for people canceling and removing
+                    # the associated payments, which can lead to confirmed
+                    # statement lines without an associated move
+                    move_unlink_ids.append(line.id)
             set_draft_ids.append(st_line.id)
 
         move_pool.button_cancel(
