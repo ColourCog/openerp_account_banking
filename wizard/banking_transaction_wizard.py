@@ -420,7 +420,7 @@ class banking_transaction_wizard(osv.TransientModel):
             'account.move.line',
             'banking_transaction_wizard_account_move_line_rel',
             'wizard_id', 'move_line_id', string='Match one or more entries',
-            domain=[('account_id.reconcile', '=', True)]),
+            domain=[('account_id.reconcile', '=', True),('journal_id.type','=','bank')]),
         'payment_option': fields.related('import_transaction_id','payment_option', string='Payment Difference', type='selection', required=True,
                                          selection=[('without_writeoff', 'Keep Open'),('with_writeoff', 'Reconcile Payment Balance')]),
         'writeoff_analytic_id': fields.related(
