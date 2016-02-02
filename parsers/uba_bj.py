@@ -84,14 +84,14 @@ class UBAParser(parser):
             if not bool(''.join(sp)):
                 continue
             if sp[0] == '':
-                if "Relevé de compte mensuel" in sp[1]:
-                    statement.id = sp[1].split("du ")[1].capitalize()
-                if "Numéro de compte :" in sp[1]:
-                    statement.local_account = sp[1].split(":")[1].replace(' ','')
+                if "Monthly Account Statement for transactions" in sp[1]:
+                    statement.id = sp[1].split("between ")[1].capitalize()
+                if "Account Number :" in sp[1]:
+                    statement.local_account = sp[1].split(":")[1].split("   ")[0].replace(' ','')
                 continue
             if sp[0] == 'DATE':
                 continue
-            if sp[1] == "Solde reporté":
+            if sp[1] == "Balance B\F":
                 statement.start_balance = convert.str2float(sp[7])
                 continue
             d = bt()

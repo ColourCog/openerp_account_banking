@@ -97,7 +97,7 @@ class banking_import_transaction(osv.osv):
                 type = 'in_invoice',
                 company_id = account_info.company_id.id,
                 partner_id = account_info.bank_partner_id.id,
-                address_invoice_id = invoice_address_id['invoice'],
+                #~ address_invoice_id = invoice_address_id['invoice'],
                 period_id = period_id,
                 journal_id = account_info.invoice_journal_id.id,
                 account_id = account_info.bank_partner_id.property_account_payable.id,
