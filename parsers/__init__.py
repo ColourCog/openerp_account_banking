@@ -21,5 +21,6 @@
 
 import models
 import uba_bj
+import uba_bj_legacy
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
